@@ -1,0 +1,21 @@
+import javax.swing.*;
+
+public class App {
+    public static void main(String[] args) throws Exception {
+        int larguraBorda = 360;
+        int alturaBorda = 640;
+
+        JFrame frame = new JFrame("Flappy Bird");
+
+        frame.setVisible(true);
+        frame.setSize(larguraBorda, alturaBorda);
+        frame.setLocationRelativeTo(null);
+        frame.setResizable(false);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        FlappyBird flappyBird = new FlappyBird();
+        frame.add(flappyBird); 
+        frame.pack();
+        frame.setVisible(true);
+    }
+}
