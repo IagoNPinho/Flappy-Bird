@@ -32,12 +32,65 @@ public class FlappyBird extends JPanel{
         }
     }
 
+    //PIPES
+    int pipeX = larguraBorda;
+    int pipeY = 0;
+    int pipeWidth = 64;
+    int pipeHeight = 512;
+
+    class Pipe {
+        int x = pipeX;
+        int y = pipeY;
+        int width = pipeWidth;
+        int height = pipeHeight;
+        Image image;
+        boolean passed = false;
+
+        Pipe(Image image) {
+            this.image = image;
+        }
+    }
 
     //Game Logic
     Bird bird;
+    int velocityX = -4;
+    double velocityY = 0;
+    double gravity = 0.8;
 
+    ArrayList<Pipe> pipes;
+
+    Random random = new Random();
+
+    Timer gameLoop;
+    Timer placePipesTimer;
+
+    boolean gameOver = false;
+
+    boolean gameOverShown = false;
+
+    double counter = 0;
+
+
+    //Constructor
     FlappyBird() {
         setPreferredSize(new Dimension(larguraBorda, alturaBorda));
+        setFocusable(true);
+        addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                FlappyBird.this.keyPressed(e);
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                FlappyBird.this.keyReleased(e);
+            }
+
+            @Override
+            public void keyTyped(KeyEvent e) {
+                FlappyBird.this.keyTyped(e);
+            }
+        });
          
         backgroundImage = new ImageIcon(getClass().getResource("./flappybirdbg.png")).getImage();
         birdImage = new ImageIcon(getClass().getResource("./flappybird.png")).getImage();
@@ -45,6 +98,22 @@ public class FlappyBird extends JPanel{
         topPipeImage = new ImageIcon(getClass().getResource("./toppipe.png")).getImage();
     
         bird = new Bird(birdImage);
+
+        pipes = new ArrayList<Pipe>();
+        placePipesTimer = new Timer(1500, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                placePipes();
+            }
+        });
+        placePipesTimer.start();
+        gameLoop = new Timer(1000/60, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                FlappyBird.this.actionPerformed(e);
+            }
+        });
+        gameLoop.start();
     }
     
     public void paintComponent(Graphics g) {
@@ -52,8 +121,92 @@ public class FlappyBird extends JPanel{
         draw(g);
     }
 
+    public void placePipes(){
+        int randomPypeY = (int) (pipeY - pipeHeight/4 - (Math.random() * pipeHeight/2));
+        Pipe topPipe = new Pipe(topPipeImage);
+        topPipe.y = randomPypeY;
+
+        int oppeningSpace = alturaBorda/4;
+        Pipe bottomPipe = new Pipe(bottomPipeImage);
+        bottomPipe.y = topPipe.y + pipeHeight + oppeningSpace;
+        
+        pipes.add(topPipe);
+        pipes.add(bottomPipe);
+    }
+
     public void draw(Graphics g) {
         g.drawImage(backgroundImage, 0, 0, larguraBorda, alturaBorda, null);
         g.drawImage(bird.image, bird.x, bird.y, bird.width, bird.height, null);
+        for (int i = 0; i < pipes.size(); i++) {
+            Pipe pipe = pipes.get(i);
+            g.drawImage(pipe.image, pipe.x, pipe.y, pipe.width, pipe.height, null);
+        }
+
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.BOLD, 20));
+        g.drawString("Score: " + (int)counter, 10, 20);
     }
+
+    public void move() {
+        velocityY += gravity;
+        bird.y += velocityY;
+        bird.y = Math.max(bird.y, 0);
+
+
+        for (int i = 0; i < pipes.size(); i++) {
+            Pipe pipe = pipes.get(i);
+            pipe.x += velocityX;
+
+            if(!pipe.passed && bird.x > pipe.x + pipe.width){
+                pipe.passed = true;
+                counter += 0.5;
+            }
+        }
+
+        if (bird.y + bird.height >= alturaBorda) {
+            gameOver = true;
+        }
+
+        if (bird.y <= 0) {
+            gameOver = true;    
+        }
+
+        
+    }
+
+    public void collision(){
+        Rectangle birdRect = new Rectangle(bird.x, bird.y, bird.width, bird.height);
+        for (int i = 0; i < pipes.size(); i++) {
+            Pipe pipe = pipes.get(i);
+            Rectangle pipeRect = new Rectangle(pipe.x, pipe.y, pipe.width, pipe.height);
+            if (birdRect.intersects(pipeRect)) {
+                gameOver = true;
+            }
+        }
+    }
+
+    public void actionPerformed(ActionEvent e) {
+        move();
+        repaint();
+        collision();
+
+        if(gameOver && !gameOverShown){
+            gameLoop.stop();
+            placePipesTimer.stop();
+            gameOverShown = true;
+            JOptionPane.showMessageDialog(this, "Game Over!");
+        }
+
+        
+    }
+
+    public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+            velocityY = -6;
+        }
+    }
+
+    public void keyReleased(KeyEvent e) {}
+
+    public void keyTyped(KeyEvent e) {}
 }
