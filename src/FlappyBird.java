@@ -13,12 +13,16 @@ public class FlappyBird extends JPanel{
     Image backgroundImage;
     Image bottomPipeImage;
     Image topPipeImage;
+    Image gameOverImage;
 
     //PASSARO
     int birdX = larguraBorda/8;
     int birdY = alturaBorda/2;
     int birdWidth = 34;
     int birdHeight = 24;
+
+    //Button Restart
+    JButton restartButton;
 
     class Bird {
         int x = birdX;
@@ -74,6 +78,7 @@ public class FlappyBird extends JPanel{
     //Constructor
     FlappyBird() {
         setPreferredSize(new Dimension(larguraBorda, alturaBorda));
+        setLayout(null);
         setFocusable(true);
         addKeyListener(new KeyAdapter() {
             @Override
@@ -96,7 +101,8 @@ public class FlappyBird extends JPanel{
         birdImage = new ImageIcon(getClass().getResource("./flappybird.png")).getImage();
         bottomPipeImage = new ImageIcon(getClass().getResource("./bottompipe.png")).getImage();
         topPipeImage = new ImageIcon(getClass().getResource("./toppipe.png")).getImage();
-    
+        gameOverImage = new ImageIcon(getClass().getResource("./gameover.png")).getImage();
+
         bird = new Bird(birdImage);
 
         pipes = new ArrayList<Pipe>();
@@ -114,6 +120,26 @@ public class FlappyBird extends JPanel{
             }
         });
         gameLoop.start();
+
+        // Iniciando o botão de restart
+        restartButton = new JButton(new ImageIcon(getClass().getResource("./restart.png")));
+        restartButton.setBounds(larguraBorda / 2 - 137, alturaBorda / 2 - 37, 274, 75);
+        restartButton.setVisible(false);
+        restartButton.setFocusable(false);
+        
+        // Removendo borda, fundo e highlight do botão
+        restartButton.setBorderPainted(false);
+        restartButton.setContentAreaFilled(false);
+        restartButton.setFocusPainted(false);
+
+        restartButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                restartGame();
+            }
+        });
+
+        add(restartButton);
     }
     
     public void paintComponent(Graphics g) {
@@ -145,6 +171,27 @@ public class FlappyBird extends JPanel{
         g.setColor(Color.WHITE);
         g.setFont(new Font("Arial", Font.BOLD, 20));
         g.drawString("Score: " + (int)counter, 10, 20);
+
+        if(gameOver){
+            // Escurecer o fundo
+
+            g.setColor(new Color(0, 0, 0, 150));
+            g.fillRect(0, 0, larguraBorda, alturaBorda);
+
+            //Inserir a image de game over
+            // imagem possui 701 x 258, por isso será preciso redim
+
+            double proportion = 2;
+            int  gameOverWidth = (int)(701 / proportion);
+            int  gameOverHeight = (int)(258 / proportion);
+            g.drawImage(gameOverImage, (larguraBorda - gameOverWidth)/2, 100, gameOverWidth, gameOverHeight, null);
+
+            // Botão de restart
+            restartButton.setVisible(true);
+            
+            // Informa que o Game over já foi mostrado
+            gameOverShown = true;
+        }
     }
 
     public void move() {
@@ -193,16 +240,45 @@ public class FlappyBird extends JPanel{
         if(gameOver && !gameOverShown){
             gameLoop.stop();
             placePipesTimer.stop();
-            gameOverShown = true;
-            JOptionPane.showMessageDialog(this, "Game Over!");
         }
 
         
     }
 
+    public void restartGame() {
+    //Resetar o bird
+    bird.y = birdY;
+    velocityY = 0;
+
+    //Resetar os pipes
+    pipes.clear();
+
+    //Resetar o contador
+    counter = 0;
+
+    //Resetar o game over
+    gameOver = false;
+    gameOverShown = false;
+
+    //Esconder o botão de restart
+    restartButton.setVisible(false);
+
+    //Reiniciar os timers
+    gameLoop.start();
+    placePipesTimer.start();
+
+    repaint();
+    }
+
     public void keyPressed(KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-            velocityY = -6;
+            velocityY = -7;
+        }
+
+        if (gameOver) {
+            if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                restartGame();
+            }
         }
     }
 
