@@ -96,7 +96,14 @@ public class FlappyBird extends JPanel{
                 FlappyBird.this.keyTyped(e);
             }
         });
-         
+        
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                jump();
+            }
+        });
+
         backgroundImage = new ImageIcon(getClass().getResource("./flappybirdbg.png")).getImage();
         birdImage = new ImageIcon(getClass().getResource("./flappybird.png")).getImage();
         bottomPipeImage = new ImageIcon(getClass().getResource("./bottompipe.png")).getImage();
@@ -270,11 +277,19 @@ public class FlappyBird extends JPanel{
     repaint();
     }
 
+   
+    public void jump() {
+        //Garantir que o pulo só ocorra se o jogo não estiver acabado
+        if (!gameOver) {
+            velocityY = -7; 
+        }
+    }
+
     public void keyPressed(KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-            velocityY = -7;
+            jump();
         }
-
+        
         if (gameOver) {
             if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                 restartGame();
